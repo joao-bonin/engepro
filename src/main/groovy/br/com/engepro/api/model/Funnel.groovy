@@ -1,18 +1,27 @@
 package br.com.engepro.api.model
 
-import groovy.transform.ToString
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.OneToMany
 
 @Entity
-@ToString(includeNames = true)
 class Funnel extends BaseEntity {
 
     String name
 
     String description
 
-    @OneToMany(mappedBy = "funnel")
+    @OneToMany(mappedBy = "funnel", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     List<Step> steps = []
+
+    @Override
+    String toString() {
+        return "Funnel{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", steps=" + steps +
+                '}';
+    }
 }
 

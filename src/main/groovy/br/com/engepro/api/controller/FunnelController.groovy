@@ -8,16 +8,7 @@ import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @Slf4j
 @RestController
@@ -37,7 +28,7 @@ class FunnelController {
     }
 
     @GetMapping(path = "/{id}")
-    ResponseEntity getFunnel(@PathVariable Long id) {
+    ResponseEntity getFunnelById(@PathVariable Long id) {
 
         Optional<Funnel> funnel = funnelRepository.findById(id)
 
@@ -79,8 +70,8 @@ class FunnelController {
     }
 
     @PutMapping(path = "/{id}")
-    ResponseEntity editFunnel(@PathVariable Long id,
-                              @RequestBody @Valid FunnelDTO requestBody, final BindingResult result) {
+    ResponseEntity updateFunnel(@PathVariable Long id,
+                                @RequestBody @Valid FunnelDTO requestBody, final BindingResult result) {
 
         if (result.hasErrors()) {
             log.warn("Funnel is not valid: {}", result)
