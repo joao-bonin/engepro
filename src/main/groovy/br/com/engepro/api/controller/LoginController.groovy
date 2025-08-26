@@ -9,7 +9,6 @@ import br.com.engepro.api.repository.UserRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -49,7 +48,7 @@ class LoginController {
         user.setLastLogin(LocalDateTime.now())
         userRepository.save(user)
 
-        return ResponseEntity.ok([token: token])
+        return ResponseEntity.ok([token: token, hasLevelConfig: user.hasLevelConfig])
     }
 
     @PostMapping("/signup")
@@ -57,10 +56,5 @@ class LoginController {
         User registeredUser = authenticationService.signup(registerUserDTO)
 
         return ResponseEntity.ok(registeredUser)
-    }
-
-    private static boolean matches(CharSequence rawPassword, String encodedPassword) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder()
-        encoder.matches(rawPassword, encodedPassword)
     }
 }

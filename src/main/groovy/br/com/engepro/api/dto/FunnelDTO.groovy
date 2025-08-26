@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size
 
 class FunnelDTO {
 
-    @NotBlank(message = "Nome do funnel é obrigatório")
+    @NotBlank(message = "Nome é obrigatório")
     String name
 
     @Size(max = 140, message = "Descrição deve ter no máximo 140 caracteres")

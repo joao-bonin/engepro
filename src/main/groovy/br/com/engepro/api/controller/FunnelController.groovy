@@ -2,11 +2,13 @@ package br.com.engepro.api.controller
 
 import br.com.engepro.api.dto.FunnelDTO
 import br.com.engepro.api.model.Funnel
+import br.com.engepro.api.model.User
 import br.com.engepro.api.repository.FunnelRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 
@@ -42,7 +44,9 @@ class FunnelController {
     }
 
     @DeleteMapping(path = "/{id}")
-    ResponseEntity deleteFunnel(@PathVariable Long id) {
+    ResponseEntity deleteFunnel(@PathVariable Long id, @AuthenticationPrincipal User user) {
+
+        if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
         funnelRepository.deleteById(id)
 
@@ -53,12 +57,14 @@ class FunnelController {
 
     @PostMapping
     ResponseEntity createFunnel(@RequestBody @Valid FunnelDTO requestBody,
-                                final BindingResult result) {
+                                final BindingResult result, @AuthenticationPrincipal User user) {
+
+        if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
         if (result.hasErrors()) {
             log.warn("Funnel is not valid: {}", result)
             return ResponseEntity.unprocessableEntity()
-                    .body(result.fieldErrors.collect { it.field + ": " + it.defaultMessage })
+                    .body(result.fieldErrors.collect { it.defaultMessage })
         }
 
         Funnel funnel = new Funnel(name: requestBody.name, description: requestBody.description)
@@ -71,12 +77,15 @@ class FunnelController {
 
     @PutMapping(path = "/{id}")
     ResponseEntity updateFunnel(@PathVariable Long id,
-                                @RequestBody @Valid FunnelDTO requestBody, final BindingResult result) {
+                                @RequestBody @Valid FunnelDTO requestBody, final BindingResult result,
+                                @AuthenticationPrincipal User user) {
+
+        if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
         if (result.hasErrors()) {
             log.warn("Funnel is not valid: {}", result)
             return ResponseEntity.unprocessableEntity()
-                    .body(result.fieldErrors.collect { it.field + ": " + it.defaultMessage })
+                    .body(result.fieldErrors.collect { it.defaultMessage })
         }
 
         Optional<Funnel> funnel = funnelRepository.findById(id)

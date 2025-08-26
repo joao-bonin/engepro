@@ -1,5 +1,6 @@
 package br.com.engepro.api.infra.security
 
+import br.com.engepro.api.model.User
 import br.com.engepro.api.repository.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
@@ -42,7 +43,7 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtService.extractUsername(jwt)
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                def user = userRepository.findByEmail(email)
+                User user = userRepository.findByEmail(email)
                         .orElseThrow { new RuntimeException("Usuário não encontrado") }
 
                 if (jwtService.isTokenValid(jwt, user)) {
