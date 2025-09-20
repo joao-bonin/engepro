@@ -9,6 +9,7 @@ import br.com.engepro.api.repository.UserRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -48,7 +49,15 @@ class LoginController {
         user.setLastLogin(LocalDateTime.now())
         userRepository.save(user)
 
-        return ResponseEntity.ok([token: token, hasLevelConfig: user.hasLevelConfig])
+        return ResponseEntity.ok([token: token, hasLevelConfig: user.hasLevelConfig, name: user.name, email: user.email])
+    }
+
+    @PostMapping("/logout")
+    ResponseEntity logout() {
+
+        SecurityContextHolder.clearContext()
+
+        return ResponseEntity.ok([message: "Logout realizado com sucesso"])
     }
 
     @PostMapping("/signup")

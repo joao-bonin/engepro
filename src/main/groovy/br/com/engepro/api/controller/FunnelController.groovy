@@ -48,6 +48,7 @@ class FunnelController {
 
         if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
+
         funnelRepository.deleteById(id)
 
         log.info("Funnel deleted: {}", id)
