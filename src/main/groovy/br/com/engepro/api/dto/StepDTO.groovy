@@ -13,6 +13,6 @@ class StepDTO {
     @NotNull(message = "Descrição é obrigatória")
     String description
 
-    @NotBlank(message = "O ID do Funil é obrigatório")
+    @NotNull(message = "O ID do Funil é obrigatório")
     Long funnelId
 }

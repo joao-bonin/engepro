@@ -6,12 +6,10 @@ import br.com.engepro.api.repository.UserRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 import java.time.LocalDateTime
 
@@ -26,9 +24,21 @@ class UserController {
         this.userRepository = userRepository
     }
 
+    @GetMapping
+    ResponseEntity getAllUsers() {
+        return ResponseEntity.ok().body(userRepository.findAll())
+    }
+
+    @GetMapping(path = "/active")
+    ResponseEntity getActiveUsers() {
+        return ResponseEntity.ok().body(userRepository.findAllByActiveIsTrue())
+    }
+
     @PostMapping
     ResponseEntity createUser(@RequestBody @Valid UserDTO requestBody,
-                              final BindingResult result) {
+                              final BindingResult result, @AuthenticationPrincipal User user) {
+
+        if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
         if (result.hasErrors()) {
             log.warn("User is not valid: {}", result)
@@ -40,17 +50,17 @@ class UserController {
                 .findByEmail(requestBody.email)
                 .ifPresent { it -> return ResponseEntity.badRequest().body("User already exists") }
 
-        User user = new User(name: requestBody.name,
+        User userToCreate = new User(name: requestBody.name,
                 email: requestBody.email,
                 password: encode(requestBody.password),
                 active: true,
                 hasLevelConfig: requestBody.hasLevelConfig,
                 lastLogin: LocalDateTime.now())
 
-        userRepository.save(user)
-        log.info("User created: {}", user)
+        userRepository.save(userToCreate)
+        log.info("User created: {}", userToCreate)
 
-        return ResponseEntity.ok().body(user)
+        return ResponseEntity.ok().body(userToCreate)
     }
 
     static String encode(CharSequence rawPassword) {

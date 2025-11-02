@@ -25,7 +25,7 @@ class FunnelController {
     ResponseEntity getAllFunnel() {
         Iterable<Funnel> funnels = funnelRepository.findAll()
 
-        log.info("Funnel list: {}", funnels)
+        log.info("Found {} funnels", funnels.size())
         return ResponseEntity.ok().body(funnels)
     }
 
