@@ -74,7 +74,8 @@ class ProjectController {
     }
 
     @GetMapping(path = "/funnel/{id}")
-    ResponseEntity getByFunnelId(@PathVariable Long id) {
+    ResponseEntity getByFunnelId(@PathVariable Long id,
+                                 @RequestParam(required = false) Boolean archived) {
 
         List<Step> steps = stepRepository.findByFunnelId(id)
         if (steps.isEmpty()) {
@@ -82,20 +83,27 @@ class ProjectController {
         }
 
         List<Map> stepsResponse = steps.collect { Step step ->
-            List<Map> projectsResponse = step.projects
-                    .findAll { it.isArchived != true }
-                    .collect { Project project ->
-                        [
-                                id         : project.id,
-                                name       : project.name,
-                                description: project.description,
-                                customer   : project.customer,
-                                startDate  : project.startDate,
-                                endDate    : project.endDate,
-                                userId     : project.user?.id,
-                                stepId     : step.id
-                        ]
-                    }
+
+            List<Project> filteredProjects = step.projects.findAll { project ->
+                if (archived == null) {
+                    return true
+                }
+                return project.isArchived == archived
+            }
+
+            List<Map> projectsResponse = filteredProjects.collect { Project project ->
+                [
+                        id         : project.id,
+                        name       : project.name,
+                        description: project.description,
+                        customer   : project.customer,
+                        startDate  : project.startDate,
+                        endDate    : project.endDate,
+                        isArchived : project.isArchived,
+                        userId     : project.user?.id,
+                        stepId     : step.id
+                ]
+            }
 
             return [
                     id      : step.id,
@@ -109,9 +117,10 @@ class ProjectController {
                 steps   : stepsResponse
         ]
 
-        log.info("Retornando {} etapas e {} projetos para o funil {}",
+        log.info("Retornando {} etapas e {} projetos (archived={}) para o funil {}",
                 stepsResponse.size(),
                 stepsResponse.sum { it.projects.size() },
+                archived,
                 id
         )
 
@@ -176,17 +185,18 @@ class ProjectController {
     }
 
 
-    @DeleteMapping("/{id}")
-    ResponseEntity delete(@PathVariable Long id) {
-
+    @PutMapping("/{id}/archive")
+    ResponseEntity toggleArchive(@PathVariable Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projeto não encontrado"))
 
-        project.isArchived = true
+        project.isArchived = !project.isArchived
         projectRepository.save(project)
 
-        log.info("Projeto arquivado: {}", project)
+        String action = project.isArchived ? "arquivado" : "desarquivado"
 
-        return ResponseEntity.ok([message: "Projeto arquivado com sucesso"])
+        log.info("Projeto {}: {}", action, project)
+
+        return ResponseEntity.ok([message: "Projeto ${action} com sucesso", archived: project.isArchived])
     }
 }

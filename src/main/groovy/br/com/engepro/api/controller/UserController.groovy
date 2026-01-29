@@ -34,6 +34,17 @@ class UserController {
         return ResponseEntity.ok().body(userRepository.findAllByActiveIsTrue())
     }
 
+    @GetMapping(path = "/{id}")
+    ResponseEntity getUserById(@PathVariable Long id) {
+        def user = userRepository.findById(id)
+
+        if (!user.isPresent()) {
+            return ResponseEntity.notFound().build()
+        }
+
+        return ResponseEntity.ok().body(user.get())
+    }
+
     @PostMapping
     ResponseEntity createUser(@RequestBody @Valid UserDTO requestBody,
                               final BindingResult result, @AuthenticationPrincipal User user) {
@@ -61,6 +72,97 @@ class UserController {
         log.info("User created: {}", userToCreate)
 
         return ResponseEntity.ok().body(userToCreate)
+    }
+
+    @PutMapping(path = "/{id}")
+    ResponseEntity updateUser(@PathVariable Long id,
+                              @RequestBody Map<String, Object> requestBody,
+                              @AuthenticationPrincipal User authenticatedUser) {
+
+        if (!authenticatedUser.hasLevelConfig) {
+            return ResponseEntity.unprocessableEntity().build()
+        }
+
+        def userOptional = userRepository.findById(id)
+
+        if (!userOptional.isPresent()) {
+            return ResponseEntity.notFound().build()
+        }
+
+        User userToUpdate = userOptional.get()
+
+        // Atualiza apenas os campos fornecidos
+        if (requestBody.containsKey('name')) {
+            userToUpdate.name = requestBody.name
+        }
+
+        if (requestBody.containsKey('email')) {
+            // Verifica se o email já existe em outro usuário
+            def existingUser = userRepository.findByEmail(requestBody.email as String)
+            if (existingUser.isPresent() && existingUser.get().id != id) {
+                return ResponseEntity.badRequest().body("Email already in use by another user")
+            }
+            userToUpdate.email = requestBody.email
+        }
+
+        if (requestBody.containsKey('password') && requestBody.password) {
+            // Valida tamanho mínimo da senha
+            if ((requestBody.password as String).length() < 8) {
+                return ResponseEntity.badRequest().body("Password must be at least 8 characters")
+            }
+            userToUpdate.password = encode(requestBody.password as String)
+        }
+
+        if (requestBody.containsKey('hasLevelConfig')) {
+            userToUpdate.hasLevelConfig = requestBody.hasLevelConfig as Boolean
+        }
+
+        if (requestBody.containsKey('active')) {
+            userToUpdate.active = requestBody.active as Boolean
+        }
+
+        userRepository.save(userToUpdate)
+        log.info("User updated: {}", userToUpdate)
+
+        return ResponseEntity.ok().body(userToUpdate)
+    }
+
+    @DeleteMapping(path = "/{id}")
+    ResponseEntity deleteUser(@PathVariable Long id, @AuthenticationPrincipal User authenticatedUser) {
+
+        if (!authenticatedUser.hasLevelConfig) {
+            return ResponseEntity.unprocessableEntity().build()
+        }
+
+        if (authenticatedUser.id == id) {
+            return ResponseEntity.badRequest().body("Cannot delete your own account")
+        }
+
+        Optional<User> userOptional = userRepository.findById(id)
+
+        if (!userOptional.isPresent()) {
+            return ResponseEntity.notFound().build()
+        }
+
+        userRepository.deleteById(id)
+        log.info("User deleted: {}", id)
+
+        return ResponseEntity.noContent().build()
+    }
+
+    @PutMapping("/{id}/activate")
+    ResponseEntity toggleActivate(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
+
+        user.active = !user.isEnabled()
+        userRepository.save(user)
+
+        String action = user.isEnabled() ? "ativado" : "inativado"
+
+        log.info("Usuário {}: {}", action, user)
+
+        return ResponseEntity.ok([message: "Projeto ${action} com sucesso", archived: user.isEnabled()])
     }
 
     static String encode(CharSequence rawPassword) {
