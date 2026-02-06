@@ -1,8 +1,10 @@
 package br.com.engepro.api.controller
 
 import br.com.engepro.api.dto.ContactDTO
+import br.com.engepro.api.dto.FunnelDTO
 import br.com.engepro.api.model.Address
 import br.com.engepro.api.model.Contact
+import br.com.engepro.api.model.Funnel
 import br.com.engepro.api.model.User
 import br.com.engepro.api.repository.ContactRepository
 import groovy.util.logging.Slf4j
@@ -64,5 +66,44 @@ class ContactController {
         log.info("Contact created: {}", contactToCreate)
 
         return ResponseEntity.ok().body(contactToCreate)
+    }
+
+    @PutMapping(path = "/{id}")
+    ResponseEntity updateContact(@PathVariable Long id,
+                                 @RequestBody @Valid ContactDTO requestBody, final BindingResult result,
+                                 @AuthenticationPrincipal User user) {
+
+        if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
+
+        if (result.hasErrors()) {
+            log.warn("Contact is not valid: {}", result)
+            return ResponseEntity.unprocessableEntity()
+                    .body(result.fieldErrors.collect { it.defaultMessage })
+        }
+
+        Optional<Contact> contact = contactRepository.findById(id)
+
+        if (contact.isPresent()) {
+            Contact contactToEdit = contact.get()
+            contactToEdit.name = requestBody.name
+            contactToEdit.email = requestBody.email
+            contactToEdit.phone = requestBody.phone
+            contactToEdit.cnpj = requestBody.cnpj
+            contactToEdit.observations = requestBody.observations
+            Address address = contactToEdit.address
+            address.street = requestBody.address.city
+            address.number = requestBody.address.city
+            address.city = requestBody.address.city
+            address.state = requestBody.address.city
+            address.quarter = requestBody.address.city
+            address.zipCode = requestBody.address.city
+            contactRepository.save(contactToEdit)
+
+            log.info("Contact edited: {}", contactToEdit)
+            return ResponseEntity.ok().body(contactToEdit)
+        }
+
+        log.info("Contact not found: {}", id)
+        return ResponseEntity.notFound().build()
     }
 }
