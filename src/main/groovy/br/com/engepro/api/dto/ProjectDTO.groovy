@@ -22,6 +22,9 @@ class ProjectDTO {
     @NotNull(message = "O ID do Passo é obrigatório")
     Long stepId
 
+    @NotNull(message = "O ID do Contato é obrigatório")
+    Long contactId
+
     @NotBlank(message = "O ID do Cliente é obrigatório")
     String customer
 

@@ -28,6 +28,11 @@ class Project extends BaseEntity {
     @JsonIgnore
     Step step
 
+    @ManyToOne
+    @JoinColumn(name = "contact_id", nullable = false)
+    @JsonIgnore
+    Contact contact
+
     @Override
     String toString() {
         return "Project(name='$name', description='$description')"

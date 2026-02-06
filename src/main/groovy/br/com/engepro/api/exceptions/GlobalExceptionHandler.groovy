@@ -16,7 +16,6 @@ class GlobalExceptionHandler {
     ProblemDetail handleSecurityException(Exception exception) {
         ProblemDetail errorDetail = null
 
-        // TODO send this stack trace to an observability tool
         exception.printStackTrace()
 
         if (exception instanceof BadCredentialsException) {
