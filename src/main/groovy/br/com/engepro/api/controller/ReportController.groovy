@@ -35,7 +35,7 @@ class ReportController {
     ProjectRepository projectRepository
 
     @GetMapping
-    ResponseEntity report(@RequestParam(name = "funnel", required = false) Integer funnelFilter) {
+    ResponseEntity report(@RequestParam(name = "funnelId", required = false) Integer funnelFilter) {
         def projects = projectRepository.findAll()
         def users = userRepository.findAll()
         def funnels = funnelRepository.findAll()
