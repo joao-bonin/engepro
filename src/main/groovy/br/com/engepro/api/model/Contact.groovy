@@ -1,7 +1,9 @@
 package br.com.engepro.api.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 
@@ -18,9 +20,8 @@ class Contact extends BaseEntity {
 
     String observations
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id", nullable = false)
-    @JsonIgnore
     Address address
 
     @Override

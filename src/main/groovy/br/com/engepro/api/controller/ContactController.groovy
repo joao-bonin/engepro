@@ -1,21 +1,21 @@
 package br.com.engepro.api.controller
 
 import br.com.engepro.api.dto.ContactDTO
-import br.com.engepro.api.dto.FunnelDTO
 import br.com.engepro.api.model.Address
 import br.com.engepro.api.model.Contact
-import br.com.engepro.api.model.Funnel
 import br.com.engepro.api.model.User
 import br.com.engepro.api.repository.ContactRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.*
 
 @Slf4j
 @RestController
+@Transactional
 @RequestMapping(path = "/contact")
 class ContactController {
 
@@ -91,12 +91,12 @@ class ContactController {
             contactToEdit.cnpj = requestBody.cnpj
             contactToEdit.observations = requestBody.observations
             Address address = contactToEdit.address
-            address.street = requestBody.address.city
-            address.number = requestBody.address.city
+            address.street = requestBody.address.street
+            address.number = requestBody.address.number
             address.city = requestBody.address.city
-            address.state = requestBody.address.city
-            address.quarter = requestBody.address.city
-            address.zipCode = requestBody.address.city
+            address.state = requestBody.address.state
+            address.quarter = requestBody.address.quarter
+            address.zipCode = requestBody.address.zipCode
             contactRepository.save(contactToEdit)
 
             log.info("Contact edited: {}", contactToEdit)

@@ -1,9 +1,11 @@
 package br.com.engepro.api.controller
 
 import br.com.engepro.api.dto.ProjectDTO
+import br.com.engepro.api.model.Contact
 import br.com.engepro.api.model.Project
 import br.com.engepro.api.model.Step
 import br.com.engepro.api.model.User
+import br.com.engepro.api.repository.ContactRepository
 import br.com.engepro.api.repository.ProjectRepository
 import br.com.engepro.api.repository.StepRepository
 import br.com.engepro.api.repository.UserRepository
@@ -29,6 +31,9 @@ class ProjectController {
     @Autowired
     UserRepository userRepository
 
+    @Autowired
+    ContactRepository contactRepository
+
 
     @GetMapping
     ResponseEntity listAll() {
@@ -40,7 +45,7 @@ class ProjectController {
                     id         : it.id,
                     name       : it.name,
                     description: it.description,
-                    customer   : it.customer,
+                    contactId  : it.contact?.id,
                     startDate  : it.startDate,
                     endDate    : it.endDate,
                     userId     : it.user?.id,
@@ -62,7 +67,7 @@ class ProjectController {
                 id         : project.id,
                 name       : project.name,
                 description: project.description,
-                customer   : project.customer,
+                contactId  : project.contact?.id,
                 startDate  : project.startDate,
                 endDate    : project.endDate,
                 userId     : project.user?.id,
@@ -96,7 +101,7 @@ class ProjectController {
                         id         : project.id,
                         name       : project.name,
                         description: project.description,
-                        customer   : project.customer,
+                        contactId  : project.contact?.id,
                         startDate  : project.startDate,
                         endDate    : project.endDate,
                         isArchived : project.isArchived,
@@ -137,10 +142,13 @@ class ProjectController {
         Step step = stepRepository.findById(dto.stepId)
                 .orElseThrow(() -> new RuntimeException("Etapa não encontrada"))
 
+        Contact contact = contactRepository.findById(dto.userId)
+                .orElseThrow(() -> new RuntimeException("Contato não encontrado"))
+
         Project project = new Project(
                 name: dto.name,
                 description: dto.description,
-                customer: dto.customer,
+                contact: contact,
                 startDate: dto.startDate,
                 endDate: dto.endDate,
                 user: user,
@@ -167,10 +175,13 @@ class ProjectController {
         Step step = stepRepository.findById(dto.stepId)
                 .orElseThrow(() -> new RuntimeException("Etapa não encontrada"))
 
+        Contact contact = contactRepository.findById(dto.userId)
+                .orElseThrow(() -> new RuntimeException("Contato não encontrado"))
+
         project.with {
             it.name = dto.name
             it.description = dto.description
-            it.customer = dto.customer
+            it.contact = contact
             it.startDate = dto.startDate
             it.endDate = dto.endDate
             it.user = user

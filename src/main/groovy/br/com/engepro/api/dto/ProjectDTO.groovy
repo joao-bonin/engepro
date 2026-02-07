@@ -25,9 +25,6 @@ class ProjectDTO {
     @NotNull(message = "O ID do Contato é obrigatório")
     Long contactId
 
-    @NotBlank(message = "O ID do Cliente é obrigatório")
-    String customer
-
     @NotNull(message = "Data/hora é obrigatória")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime startDate

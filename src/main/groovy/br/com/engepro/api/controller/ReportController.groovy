@@ -46,7 +46,7 @@ class ReportController {
             [funnel.id, [
                     name      : funnel.name,
                     steps     : sortedSteps.collect { it.id },
-                    lastStepId: sortedSteps.last()?.id
+                    lastStepId: sortedSteps ?sortedSteps.last()?.id : null
             ]]
         }
 
@@ -76,7 +76,7 @@ class ReportController {
             [
                     id        : project.id,
                     name      : project.name,
-                    customer  : project.customer,
+                    customer  : project.contact.name,
                     isArchived: project.isArchived ?: false, // Estado de Visibilidade
                     status    : status, // Estado de Progresso
                     progress  : progress,

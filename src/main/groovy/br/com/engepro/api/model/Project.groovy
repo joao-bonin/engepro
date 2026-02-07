@@ -12,7 +12,6 @@ class Project extends BaseEntity {
 
     String name
     String description
-    String customer
     Boolean isArchived
 
     LocalDateTime startDate
