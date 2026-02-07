@@ -35,31 +35,15 @@ class ReportController {
     ProjectRepository projectRepository
 
     @GetMapping
-    ResponseEntity report(@RequestParam(name = "funnel", required = false) String funnelFilter) {
+    ResponseEntity report(@RequestParam(name = "funnel", required = false) Integer funnelFilter) {
         def projects = projectRepository.findAll()
         def users = userRepository.findAll()
         def funnels = funnelRepository.findAll()
         def now = LocalDateTime.now()
 
-        if (funnelFilter && !funnelFilter.equalsIgnoreCase("Todos")) {
-            def funnelIds = [] as Set
-            try {
-                funnelIds << funnelFilter.toLong()
-            } catch (NumberFormatException ignored) {
-                // Ignore invalid id formats and try to match by name.
-            }
-            if (funnelIds.isEmpty()) {
-                def matchedFunnel = funnels.find { it.name?.equalsIgnoreCase(funnelFilter) }
-                if (matchedFunnel) {
-                    funnelIds << matchedFunnel.id
-                }
-            }
-            if (funnelIds.isEmpty()) {
-                projects = []
-            } else {
-                projects = projects.findAll { project ->
-                    funnelIds.contains(project.step?.funnel?.id)
-                }
+        if (funnelFilter != null) {
+            projects = projects.findAll { project ->
+                project.step?.funnel?.id == funnelFilter
             }
         }
 
