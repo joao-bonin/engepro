@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -34,11 +35,17 @@ class ReportController {
     ProjectRepository projectRepository
 
     @GetMapping
-    ResponseEntity report() {
+    ResponseEntity report(@RequestParam(name = "funnel", required = false) Integer funnelFilter) {
         def projects = projectRepository.findAll()
         def users = userRepository.findAll()
         def funnels = funnelRepository.findAll()
         def now = LocalDateTime.now()
+
+        if (funnelFilter != null) {
+            projects = projects.findAll { project ->
+                project.step?.funnel?.id == funnelFilter
+            }
+        }
 
         // Mapear funis para saber qual é a última etapa de cada um
         def funnelMap = funnels.collectEntries { funnel ->
