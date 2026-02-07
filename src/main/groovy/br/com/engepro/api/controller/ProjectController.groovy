@@ -142,7 +142,7 @@ class ProjectController {
         Step step = stepRepository.findById(dto.stepId)
                 .orElseThrow(() -> new RuntimeException("Etapa não encontrada"))
 
-        Contact contact = contactRepository.findById(dto.userId)
+        Contact contact = contactRepository.findById(dto.contactId)
                 .orElseThrow(() -> new RuntimeException("Contato não encontrado"))
 
         Project project = new Project(
@@ -175,7 +175,7 @@ class ProjectController {
         Step step = stepRepository.findById(dto.stepId)
                 .orElseThrow(() -> new RuntimeException("Etapa não encontrada"))
 
-        Contact contact = contactRepository.findById(dto.userId)
+        Contact contact = contactRepository.findById(dto.contactId)
                 .orElseThrow(() -> new RuntimeException("Contato não encontrado"))
 
         project.with {

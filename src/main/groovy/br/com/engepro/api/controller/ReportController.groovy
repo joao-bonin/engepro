@@ -53,7 +53,7 @@ class ReportController {
             [funnel.id, [
                     name      : funnel.name,
                     steps     : sortedSteps.collect { it.id },
-                    lastStepId: sortedSteps ?sortedSteps.last()?.id : null
+                    lastStepId: sortedSteps ? sortedSteps.last()?.id : null
             ]]
         }
 
@@ -63,7 +63,9 @@ class ReportController {
             def progress = 0
 
             // Lógica de Status (Trabalho Real)
-            if (project.step?.id == funnelInfo?.lastStepId) {
+            if (project.isArchived) {
+                status = "Arquivado"
+            } else if(project.step?.id == funnelInfo?.lastStepId) {
                 status = "Concluído"
                 progress = 100
             } else if (project.endDate && project.endDate.isBefore(now)) {
@@ -84,8 +86,8 @@ class ReportController {
                     id        : project.id,
                     name      : project.name,
                     customer  : project.contact.name,
-                    isArchived: project.isArchived ?: false, // Estado de Visibilidade
-                    status    : status, // Estado de Progresso
+                    isArchived: project.isArchived,
+                    status    : status,
                     progress  : progress,
                     endDate   : project.endDate,
                     userName  : project.user?.name,
