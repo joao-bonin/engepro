@@ -4,6 +4,7 @@ import br.com.engepro.api.dto.FunnelDTO
 import br.com.engepro.api.model.Funnel
 import br.com.engepro.api.model.User
 import br.com.engepro.api.repository.FunnelRepository
+import br.com.engepro.api.repository.StepRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +20,9 @@ class FunnelController {
 
     @Autowired
     FunnelRepository funnelRepository
+
+    @Autowired
+    StepRepository stepRepository
 
 
     @GetMapping
@@ -48,12 +52,16 @@ class FunnelController {
 
         if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
+        if (stepRepository.existsByFunnelId(id)) {
+            log.info("Funnel {} has related steps", id)
+            return ResponseEntity.ok().body(false)
+        }
 
         funnelRepository.deleteById(id)
 
         log.info("Funnel deleted: {}", id)
 
-        return ResponseEntity.ok().build()
+        return ResponseEntity.ok().body(true)
     }
 
     @PostMapping
