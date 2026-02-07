@@ -6,6 +6,7 @@ import br.com.engepro.api.model.Funnel
 import br.com.engepro.api.model.Step
 import br.com.engepro.api.model.User
 import br.com.engepro.api.repository.FunnelRepository
+import br.com.engepro.api.repository.ProjectRepository
 import br.com.engepro.api.repository.StepRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
@@ -27,6 +28,9 @@ class StepController {
 
     @Autowired
     FunnelRepository funnelRepository
+
+    @Autowired
+    ProjectRepository projectRepository
 
 
     @PostMapping
@@ -88,6 +92,11 @@ class StepController {
 
         if (!user.hasLevelConfig) return ResponseEntity.unprocessableEntity().build()
 
+        if (projectRepository.existsByStepId(id)) {
+            log.info("Step {} has related projects", id)
+            return ResponseEntity.ok().body(false)
+        }
+
         Optional<Step> stepOpt = stepRepository.findById(id)
 
         if (stepOpt.isEmpty()) {
@@ -102,6 +111,6 @@ class StepController {
         funnelRepository.save(funnel)
 
         log.info("Step removed via Funnel: {}", id)
-        return ResponseEntity.noContent().build()
+        return ResponseEntity.ok().body(true)
     }
 }

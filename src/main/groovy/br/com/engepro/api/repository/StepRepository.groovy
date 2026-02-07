@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository
 interface StepRepository extends CrudRepository<Step, Long> {
 
     List<Step> findByFunnelId(Long funnelId)
+
+    boolean existsByFunnelId(Long funnelId)
 }
