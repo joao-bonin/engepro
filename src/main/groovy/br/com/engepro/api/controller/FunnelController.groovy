@@ -26,19 +26,24 @@ class FunnelController {
 
 
     @GetMapping
-    ResponseEntity getAllFunnel() {
-        Iterable<Funnel> funnels = funnelRepository.findAll()
+    ResponseEntity getAllFunnel(@AuthenticationPrincipal User user) {
+        Iterable<Funnel> funnels = user.hasLevelConfig ? funnelRepository.findAll() : user.allowedFunnels
 
         log.info("Found {} funnels", funnels.size())
         return ResponseEntity.ok().body(funnels)
     }
 
     @GetMapping(path = "/{id}")
-    ResponseEntity getFunnelById(@PathVariable Long id) {
+    ResponseEntity getFunnelById(@PathVariable Long id, @AuthenticationPrincipal User user) {
 
         Optional<Funnel> funnel = funnelRepository.findById(id)
 
         if (funnel.isPresent()) {
+            if (!user.hasLevelConfig && !user.allowedFunnels.any { it.id == id }) {
+                log.info("User {} without access to funnel {}", user.id, id)
+                return ResponseEntity.status(403).build()
+            }
+
             log.info("Funnel found: {}", funnel.get())
             return ResponseEntity.ok().body(funnel.get())
         }

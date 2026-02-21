@@ -1,7 +1,9 @@
 package br.com.engepro.api.controller
 
 import br.com.engepro.api.dto.UserDTO
+import br.com.engepro.api.model.Funnel
 import br.com.engepro.api.model.User
+import br.com.engepro.api.repository.FunnelRepository
 import br.com.engepro.api.repository.UserRepository
 import groovy.util.logging.Slf4j
 import jakarta.validation.Valid
@@ -20,8 +22,11 @@ class UserController {
 
     UserRepository userRepository
 
-    UserController(UserRepository userRepository) {
+    FunnelRepository funnelRepository
+
+    UserController(UserRepository userRepository, FunnelRepository funnelRepository) {
         this.userRepository = userRepository
+        this.funnelRepository = funnelRepository
     }
 
     @GetMapping
@@ -61,12 +66,18 @@ class UserController {
                 .findByEmail(requestBody.email)
                 .ifPresent { it -> return ResponseEntity.badRequest().body("User already exists") }
 
+        Set<Funnel> allowedFunnels = resolveAllowedFunnels(requestBody.hasLevelConfig, requestBody.funnelIds)
+        if (allowedFunnels == null) {
+            return ResponseEntity.badRequest().body("Usuário comum precisa ter ao menos um funil vinculado")
+        }
+
         User userToCreate = new User(name: requestBody.name,
                 email: requestBody.email,
                 password: encode(requestBody.password),
                 active: true,
                 hasLevelConfig: requestBody.hasLevelConfig,
-                lastLogin: LocalDateTime.now())
+                lastLogin: LocalDateTime.now(),
+                allowedFunnels: allowedFunnels)
 
         userRepository.save(userToCreate)
         log.info("User created: {}", userToCreate)
@@ -121,6 +132,19 @@ class UserController {
             userToUpdate.active = requestBody.active as Boolean
         }
 
+        Boolean hasLevelConfig = requestBody.containsKey('hasLevelConfig') ?
+                requestBody.hasLevelConfig as Boolean : userToUpdate.hasLevelConfig
+
+        Collection<Long> requestedFunnelIds = requestBody.containsKey('funnelIds') ?
+                normalizeFunnelIds(requestBody.funnelIds) :
+                userToUpdate.allowedFunnels.collect { it.id }
+
+        Set<Funnel> allowedFunnels = resolveAllowedFunnels(hasLevelConfig, requestedFunnelIds)
+        if (allowedFunnels == null) {
+            return ResponseEntity.badRequest().body("Usuário comum precisa ter ao menos um funil vinculado")
+        }
+        userToUpdate.allowedFunnels = allowedFunnels
+
         userRepository.save(userToUpdate)
         log.info("User updated: {}", userToUpdate)
 
@@ -163,6 +187,35 @@ class UserController {
         log.info("Usuário {}: {}", action, user)
 
         return ResponseEntity.ok([message: "Projeto ${action} com sucesso", archived: user.isEnabled()])
+    }
+
+    private Set<Funnel> resolveAllowedFunnels(Boolean hasLevelConfig, Collection<Long> funnelIds) {
+        if (hasLevelConfig) {
+            return [] as Set
+        }
+
+        List<Long> ids = normalizeFunnelIds(funnelIds)
+
+        if (!ids) {
+            return null
+        }
+
+        List<Funnel> funnels = funnelRepository.findAllByIdIn(ids)
+        if (funnels.size() != ids.unique().size()) {
+            return null
+        }
+
+        return funnels as Set
+    }
+
+    private List<Long> normalizeFunnelIds(def funnelIds) {
+        if (!(funnelIds instanceof Collection)) {
+            return []
+        }
+
+        return (funnelIds as Collection)
+                .findAll { it != null }
+                .collect { (it as Number).longValue() }
     }
 
     static String encode(CharSequence rawPassword) {
