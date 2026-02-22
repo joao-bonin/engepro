@@ -18,4 +18,6 @@ class UserDTO {
 
     @NotNull(message = "Preencha o nível de acesso")
     Boolean hasLevelConfig
+
+    List<Long> funnelIds = []
 }

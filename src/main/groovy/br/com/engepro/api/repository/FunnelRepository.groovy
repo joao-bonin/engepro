@@ -5,4 +5,7 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface FunnelRepository extends CrudRepository<Funnel, Long> {}
+interface FunnelRepository extends CrudRepository<Funnel, Long> {
+
+    List<Funnel> findAllByIdIn(Collection<Long> ids)
+}
