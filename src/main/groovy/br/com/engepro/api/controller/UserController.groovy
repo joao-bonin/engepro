@@ -39,6 +39,12 @@ class UserController {
         return ResponseEntity.ok().body(userRepository.findAllByActiveIsTrue())
     }
 
+    @GetMapping(path = "/internal")
+    ResponseEntity getInternalUsers() {
+        log.info("Fetching internal users")
+        return ResponseEntity.ok().body(userRepository.findAllByActiveIsTrueAndHasLevelConfigIsTrue())
+    }
+
     @GetMapping(path = "/{id}")
     ResponseEntity getUserById(@PathVariable Long id) {
         def user = userRepository.findById(id)

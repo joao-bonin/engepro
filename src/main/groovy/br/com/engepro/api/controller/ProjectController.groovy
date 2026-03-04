@@ -57,6 +57,25 @@ class ProjectController {
         return ResponseEntity.ok(response)
     }
 
+    @GetMapping("/info")
+    ResponseEntity listInfo() {
+        List<Project> projects = projectRepository.findAll()
+
+        List<Map> response = projects.collect {
+            [
+                    id          : it.id,
+                    name        : it.name,
+                    funnelName  : it.step?.funnel?.name,
+                    stepName    : it.step?.name,
+                    customerName: it.contact?.name,
+                    userName    : it.user.name,
+                    isArchived  : it.isArchived == true
+            ]
+        }
+
+        return ResponseEntity.ok(response)
+    }
+
 
     @GetMapping("/{id}")
     ResponseEntity getById(@PathVariable Long id) {
