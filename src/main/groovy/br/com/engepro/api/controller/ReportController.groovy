@@ -7,11 +7,13 @@ import br.com.engepro.api.repository.UserRepository
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import br.com.engepro.api.model.User
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -35,13 +37,24 @@ class ReportController {
     ProjectRepository projectRepository
 
     @GetMapping
-    ResponseEntity report(@RequestParam(name = "funnelId", required = false) Integer funnelFilter) {
+    ResponseEntity report(@RequestParam(name = "funnelId", required = false) Integer funnelFilter,
+                          @AuthenticationPrincipal User user) {
         def projects = projectRepository.findAll()
         def users = userRepository.findAll()
-        def funnels = funnelRepository.findAll()
+        def funnels = user.hasLevelConfig ? funnelRepository.findAll() : user.allowedFunnels
         def now = LocalDateTime.now()
+        def allowedFunnelIds = funnels.collect { it.id } as Set
+
+        projects = projects.findAll { project ->
+            project.step?.funnel?.id in allowedFunnelIds
+        }
 
         if (funnelFilter != null) {
+            if (!user.hasLevelConfig && !(funnelFilter as Long in allowedFunnelIds)) {
+                log.info("User {} without access to funnel {}", user.id, funnelFilter)
+                return ResponseEntity.status(403).build()
+            }
+
             projects = projects.findAll { project ->
                 project.step?.funnel?.id == funnelFilter
             }
